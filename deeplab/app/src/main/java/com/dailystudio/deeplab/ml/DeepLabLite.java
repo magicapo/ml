@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.os.Looper;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 import com.dailystudio.app.utils.ArrayUtils;
 import com.dailystudio.app.utils.BitmapUtils;
@@ -26,7 +28,7 @@ import java.util.Random;
 public class DeepLabLite implements DeeplabInterface {
 
     private final static String MODEL_PATH = "deeplabv3_257_mv_gpu.tflite";
-    private final static boolean USE_GPU = false;
+    private final static boolean USE_GPU = true;
 
     private static final float IMAGE_MEAN = 128.0f;
     private static final float IMAGE_STD = 128.0f;
@@ -42,6 +44,8 @@ public class DeepLabLite implements DeeplabInterface {
     private int[][] mSegmentBits;
     private int[] mSegmentColors;
 
+    private Context mContext;
+
     private final static Random RANDOM = new Random(System.currentTimeMillis());
 
     @Override
@@ -49,6 +53,7 @@ public class DeepLabLite implements DeeplabInterface {
         if (context == null) {
             return false;
         }
+        mContext = context;
 
         mModelBuffer = loadModelFile(context, MODEL_PATH);
         if (mModelBuffer == null) {
@@ -163,6 +168,10 @@ public class DeepLabLite implements DeeplabInterface {
         Logger.debug("inference finishes at %d", end);
 
         Logger.debug("%d millis per core segment call.", (end - start));
+
+        Looper.prepare();
+        Toast.makeText(mContext, (end - start)+"ms", Toast.LENGTH_SHORT).show();
+        Looper.loop();
 
         Bitmap maskBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
 
